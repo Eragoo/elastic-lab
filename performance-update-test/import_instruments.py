@@ -81,7 +81,7 @@ def read_csv_data(filename="instruments_test_data.csv"):
                     print(f"  - {col}: {count} missing values")
             
             # Remove rows with missing critical data
-            df = df.dropna(subset=['isin', 'name', 'price'])
+            df = df.dropna(subset=['isin', 'name', 'long_name', 'price'])
             print(f"✓ After removing rows with missing data: {len(df)} records")
         
         return df
@@ -108,6 +108,7 @@ def prepare_bulk_data(df, index_name="instruments"):
             "_source": {
                 "isin": row['isin'],
                 "name": row['name'],
+                "long_name": row['long_name'],
                 "price": float(row['price']),
                 "updated_at": datetime.now().isoformat()
             }
@@ -186,7 +187,10 @@ def verify_data(client, index_name="instruments", sample_size=5):
         print(f"\nSample documents:")
         for i, hit in enumerate(search_response['hits']['hits'], 1):
             source = hit['_source']
-            print(f"{i}. ISIN: {source['isin']}, Name: {source['name']}, Price: ${source['price']:.2f}")
+            long_name_preview = source.get('long_name', 'N/A')[:50] + "..." if len(source.get('long_name', '')) > 50 else source.get('long_name', 'N/A')
+            print(f"{i}. ISIN: {source['isin']}, Name: {source['name']}")
+            print(f"   Long Name: {long_name_preview}")
+            print(f"   Price: ${source['price']:.2f}")
         
         return total_docs
         

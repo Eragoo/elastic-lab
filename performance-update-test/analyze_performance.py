@@ -56,10 +56,16 @@ def analyze_search_performance(search_df):
         print(f"  Std Dev: {successful_searches['duration_ms'].std():.2f}ms")
         print()
         
-        # Performance by range type
-        print("Performance by Range Type:")
-        range_stats = successful_searches.groupby('range_type')['duration_ms'].agg(['mean', 'median', 'count'])
-        print(range_stats.round(2))
+        # Performance by search type
+        print("Performance by Search Type:")
+        search_stats = successful_searches.groupby('search_type')['duration_ms'].agg(['mean', 'median', 'count'])
+        print(search_stats.round(2))
+        print()
+        
+        # Performance by query type
+        print("Performance by Query Type:")
+        query_stats = successful_searches.groupby('query_type')['duration_ms'].agg(['mean', 'median', 'count'])
+        print(query_stats.round(2))
         print()
 
 def analyze_update_performance(update_df):
@@ -199,14 +205,15 @@ def create_visualizations(update_df, search_df):
             axes[0, 1].set_ylabel('Updates/Second')
             axes[0, 1].tick_params(axis='x', rotation=45)
         
-        # Search duration by range type
+        # Search duration by query type
         if len(search_df) > 0:
             successful_searches = search_df[search_df['success']]
-            if len(successful_searches) > 0:
-                axes[1, 0].boxplot([successful_searches[successful_searches['range_type'] == rt]['duration_ms'].values 
-                                  for rt in successful_searches['range_type'].unique()], 
-                                 labels=successful_searches['range_type'].unique())
-                axes[1, 0].set_title('Search Duration by Range Type')
+            if len(successful_searches) > 0 and 'query_type' in successful_searches.columns:
+                unique_query_types = successful_searches['query_type'].unique()
+                box_data = [successful_searches[successful_searches['query_type'] == qt]['duration_ms'].values 
+                           for qt in unique_query_types]
+                axes[1, 0].boxplot(box_data, labels=unique_query_types)
+                axes[1, 0].set_title('Search Duration by Query Type')
                 axes[1, 0].set_ylabel('Duration (ms)')
                 axes[1, 0].tick_params(axis='x', rotation=45)
         
